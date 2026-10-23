@@ -2,3 +2,4 @@ build/
 output/
 *.o
 __pycache__/
+site/
