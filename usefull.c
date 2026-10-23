@@ -196,6 +196,6 @@ float getNorme(float h[nbCell+2],float hex[nbCell+2],float dx)
 		diff[i] = vAbs(h[i] - hex[i]);
 	}
 	
-	normh = dx*maxVal(diff);
+	normh = maxVal(diff); /* max norm: no dx factor */
 	return normh;
 }

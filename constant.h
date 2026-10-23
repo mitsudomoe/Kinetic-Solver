@@ -27,7 +27,7 @@
 #ifndef constant_h
 	#define constant_h
 
-	#define PI 3.1415
+	#define PI 3.14159265358979323846
 	#define g 9.81 /* gravitational constant */
 	#define bInf -10.0 /* the lower bound of the domain */
 	#define bSup 10.0 /* the upper bound of the domain */
