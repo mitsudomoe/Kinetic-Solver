@@ -58,6 +58,102 @@ it reflects.
 
 ![Dam break over the bump](assets/dam-break-bump.png)
 
+## Moving shorelines: Thacker's bowl
+
+In a parabolic bowl the free surface stays a plane that rocks back and forth, with
+a velocity uniform over the wet region (Thacker, 1981). Both shorelines move up and
+down the dry slopes, which makes it one of the hardest tests for wet/dry fronts.
+
+![Thacker's oscillation](assets/thacker.png)
+
+L1 error of $h$ after one period (16.05 s):
+
+| Scheme | 100 | 200 | 400 | 800 | 1600 |
+|---|---|---|---|---|---|
+| kinetic | 0.298 | 0.171 | 0.0945 | 0.0512 | 0.0272 |
+| Rusanov | 0.0476 | 0.0233 | 0.0134 | 0.00743 | 0.00396 |
+
+Both schemes converge (order about 0.9) and keep $h \ge 0$ and the mass to
+round-off. The kinetic scheme has a larger error constant, and the reason is
+instructive. Fitting the free surface on 400 cells:
+
+| | tilt at $T/2$ | $u$ at $T/2$ | tilt at $T$ | $u$ at $T$ |
+|---|---|---|---|---|
+| exact | +0.02395 | 0 | −0.02395 | 0 |
+| kinetic | +0.02319 | +0.0001 | −0.02272 | −0.0006 |
+| Rusanov | +0.02370 | +0.0086 | −0.02375 | −0.0146 |
+
+The kinetic scheme gets the **phase** right but **damps the amplitude** by about
+5% per period; Rusanov keeps the amplitude but drifts in phase. The damping does not
+depend on the time integrator or the CFL number, so it is the numerical dissipation
+of the kinetic fluxes over a smooth slope, consistent with its discrete entropy
+inequality.
+
+## Steady flows over a bump
+
+Water enters on the left with a fixed discharge $q$ and settles into a steady flow
+over the bump (Goutal & Maurel, 1997; SWASHES, 2013). Along each smooth part of the
+flow the discharge is uniform and the Bernoulli head
+$q^2/(2gh^2) + h + Z$ is constant. Three regimes:
+
+- **subcritical** ($q = 4.42$, outlet height 2): the surface dips over the bump;
+- **transcritical** ($q = 1.53$): the flow accelerates over the bump, becomes
+  critical at the crest and supercritical downstream;
+- **with a hydraulic jump** ($q = 0.18$, outlet height 0.33): supercritical after the
+  crest, then a stationary jump back to the subcritical outlet height, located by the
+  Rankine-Hugoniot condition (x = 1.666).
+
+![Steady flows over the bump](assets/steady-flows.png)
+
+After 100 to 200 s of simulated time, 400 cells:
+
+| Case | Scheme | L1 error of $h$ | max deviation of the discharge |
+|---|---|---|---|
+| subcritical | kinetic | 0.039 | 0.10% |
+| | Rusanov | 0.067 | 0.62% |
+| transcritical | kinetic | 0.048 | 0.23% |
+| | Rusanov | 0.305 | 1.6% |
+| hydraulic jump | kinetic | 0.016 | 20% (in the jump cell) |
+| | Rusanov | 0.066 | 25% (in the jump cell) |
+
+The kinetic scheme is the more accurate of the two on all three regimes. Its
+discharge stays almost uniform across the bump, where Rusanov's varies by up to
+1.6%, and on the transcritical flow Rusanov's upstream level is visibly too low.
+Both place the jump within two cells of its exact position, and the numerical jump
+converges to it as the mesh is refined.
+
+The outlet boundary condition matters here: the downstream height is imposed only
+while the outflow is subcritical (see
+[Implementation](implementation.md#boundary-conditions)).
+
+## Run-up on a beach
+
+A wave travelling to the right steepens into a bore, runs up a dry beach of slope
+0.1, and flows back down. There is no exact solution.
+
+![Run-up on a beach](assets/beach-runup.png)
+
+Maximum run-up above still water, and lowest shoreline position during the backwash
+(initial shoreline at x = 5):
+
+| Cells | kinetic run-up | Rusanov run-up | kinetic backwash | Rusanov backwash |
+|---|---|---|---|---|
+| 250 | 0.255 m | 0.285 m | x = 4.15 | x = 7.75 |
+| 500 | 0.348 m | 0.363 m | x = 4.08 | x = 5.48 |
+| 1000 | 0.421 m | 0.429 m | x = 4.04 | x = 4.39 |
+| 2000 | 0.478 m | 0.481 m | x = 4.04 | x = 4.19 |
+
+The maximum run-up converges slowly with resolution, as usual for the thin tongue of
+water at the tip, and the two schemes agree increasingly well. The backwash shows a
+clear difference: the kinetic scheme drains the beach and pulls the shoreline below
+its initial position at every resolution, while Rusanov leaves water hanging on the
+slope on coarse meshes (the shoreline stays at x = 7.75 with 250 cells). This matches
+a known limitation of the hydrostatic reconstruction (Delestre et al., 2012): when the
+bottom step between two cells, slope × Δx, is comparable to the water height, it
+underestimates the velocity and overestimates the height of thin flows, and the
+error vanishes as the mesh is refined. The kinetic scheme treats the step as a
+potential barrier instead and drains the beach correctly in this test.
+
 ## Convergence in space
 
 L1 error of $h$ at $t = 1.5$ s as the grid is refined (forward Euler, default CFL):
@@ -116,7 +212,8 @@ Ersoy, 2026).
 ## Conservation and positivity
 
 - Mass is conserved to round-off ($< 10^{-12}$ relative) with periodic boundaries,
-  walls, and on the dam breaks before the waves reach the boundaries.
+  walls (including Thacker's bowl and the beach), and on the dam breaks before the
+  waves reach the boundaries.
 - The water height never becomes negative, for both schemes and all integrators,
   including dry fronts.
 

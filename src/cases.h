@@ -30,14 +30,17 @@ typedef enum
 {
 	BC_FREE,      /* zero-gradient (transmissive) */
 	BC_WALL,      /* reflective wall */
-	BC_PERIODIC
+	BC_PERIODIC,
+	BC_INFLOW_OUTFLOW /* imposed discharge on the left; on the right, imposed
+	                   * height h_out while the outflow is subcritical, free
+	                   * once it is supercritical */
 } BoundaryKind;
 
 typedef struct TestCase TestCase;
 
 /* Primitive of the bottom height: the cell average of z over [a, b] is
  * (P(b) - P(a)) / (b - a), as in Section 3.1 of the paper. */
-typedef double (*TopographyPrimitive)(double x);
+typedef double (*TopographyPrimitive)(const TestCase *tc, double x);
 
 /* Fills h and hu at position x, given the (cell-averaged) bottom z. */
 typedef void (*InitialCondition)(const TestCase *tc, double x, double z, double *h, double *hu);
@@ -58,6 +61,11 @@ struct TestCase
 	ExactSolution exact;
 	double h_left, h_right;   /* dam breaks */
 	double level;             /* lake at rest: free surface h + z */
+	double discharge;         /* inflow-outflow: imposed discharge q on the left */
+	double h_out;             /* inflow-outflow: height imposed on the right while subcritical */
+	double depth;             /* Thacker bowl: depth h0 at the centre */
+	double radius;            /* Thacker bowl: half-width a of the wet region at rest */
+	double amplitude;         /* Thacker: velocity amplitude B; run-up: wave height */
 };
 
 const TestCase *case_find(const char *name);
@@ -72,6 +80,11 @@ void case_fill_ghost_bottom(const TestCase *tc, Grid *grid);
 
 /* Fills the ghost cells of h and hu. */
 void case_apply_boundary(const TestCase *tc, Grid *grid);
+
+/* Water height of a steady flow with discharge q and Bernoulli head H
+ * (q^2 / (2 g h^2) + h + z = H) on the subcritical or supercritical branch
+ * (exposed for tests). Returns the critical height when no root exists. */
+double case_bernoulli_height(double q, double head, double z, int supercritical);
 
 /* Stoker's middle state for a dam break on a wet bed (exposed for tests). */
 double case_stoker_middle_height(double h_left, double h_right);
