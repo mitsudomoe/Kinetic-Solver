@@ -9,7 +9,7 @@ OBJECTS = $(SOURCES:src/%.c=$(BUILD)/%.o)
 PROGRAM = $(BUILD)/kinetic-solver
 HARNESS = $(BUILD)/flux-harness
 
-.PHONY: all test clean
+.PHONY: all test docs doc-figures clean
 
 all: $(PROGRAM)
 
@@ -28,5 +28,11 @@ $(HARNESS): tests/flux_harness.c $(OBJECTS)
 test: $(PROGRAM) $(HARNESS)
 	$(PYTHON) -m unittest discover -s tests -v
 
+docs:
+	mkdocs build --strict
+
+doc-figures: $(PROGRAM)
+	$(PYTHON) scripts/make_doc_figures.py
+
 clean:
-	rm -rf $(BUILD) output
+	rm -rf $(BUILD) output site

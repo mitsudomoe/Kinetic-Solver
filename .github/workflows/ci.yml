@@ -21,3 +21,15 @@ jobs:
         run: make CC=${{ matrix.cc }} CFLAGS="-std=c99 -O2 -Wall -Wextra -Wpedantic -Wshadow -Werror"
       - name: Test
         run: make test CC=${{ matrix.cc }}
+
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install MkDocs
+        run: pip install -r docs/requirements.txt
+      - name: Build the documentation (warnings are errors)
+        run: mkdocs build --strict
