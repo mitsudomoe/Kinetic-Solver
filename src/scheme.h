@@ -65,8 +65,10 @@ void scheme_list(void);
 /* Time step dx * cfl / max wave speed (dx * cfl if the domain is dry). */
 double scheme_time_step(const Scheme *scheme, const Grid *grid, double cfl);
 
-/* Advances the interior cells by dt. The ghost cells must be up to date;
- * workspace must hold 2 * (n + 1) Flux values. */
-void scheme_step(const Scheme *scheme, Grid *grid, double dt, Flux *workspace);
+/* Spatial operator, in the form used by the time integrators:
+ *     dU_i/dt = L(U)_i = -D_i / dx,   D_i = F^-_{i+1/2} - F^+_{i-1/2}.
+ * Fills dh[i] and dhu[i] with D_i for the interior cells i = 1..n. The ghost
+ * cells must be up to date; workspace must hold 2 * (n + 1) Flux values. */
+void scheme_flux_balance(const Scheme *scheme, const Grid *grid, double *dh, double *dhu, Flux *workspace);
 
 #endif

@@ -4,7 +4,7 @@ LDLIBS  = -lm
 PYTHON  ?= python3
 
 BUILD   = build
-SOURCES = src/grid.c src/quadrature.c src/kinetic.c src/rusanov.c src/scheme.c src/cases.c src/output.c
+SOURCES = src/grid.c src/quadrature.c src/kinetic.c src/rusanov.c src/scheme.c src/integrator.c src/simulation.c src/cases.c src/output.c
 OBJECTS = $(SOURCES:src/%.c=$(BUILD)/%.o)
 PROGRAM = $(BUILD)/kinetic-solver
 HARNESS = $(BUILD)/flux-harness

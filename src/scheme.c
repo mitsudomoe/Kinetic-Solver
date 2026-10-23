@@ -78,11 +78,10 @@ double scheme_time_step(const Scheme *scheme, const Grid *grid, double cfl)
 	return cfl * grid->dx / speed;
 }
 
-void scheme_step(const Scheme *scheme, Grid *grid, double dt, Flux *workspace)
+void scheme_flux_balance(const Scheme *scheme, const Grid *grid, double *dh, double *dhu, Flux *workspace)
 {
 	Flux *seen_by_left = workspace;               /* F^-_{j+1/2}, j = 0..n */
 	Flux *seen_by_right = workspace + grid->n + 1; /* F^+_{j+1/2}, j = 0..n */
-	double ratio = dt / grid->dx;
 	int i;
 
 	/* One pass over the n + 1 interfaces: each flux is computed once. */
@@ -96,16 +95,7 @@ void scheme_step(const Scheme *scheme, Grid *grid, double dt, Flux *workspace)
 
 	for (i = 1; i <= grid->n; i++)
 	{
-		grid->h[i] -= ratio * (seen_by_left[i].h - seen_by_right[i - 1].h);
-		grid->hu[i] -= ratio * (seen_by_left[i].hu - seen_by_right[i - 1].hu);
-
-		/* Both schemes keep h >= 0 under their CFL condition; this only
-		 * removes round-off level negative values and stale momentum in
-		 * cells that just dried out. */
-		if (grid->h[i] <= KS_DRY_TOL)
-		{
-			grid->h[i] = ks_max(grid->h[i], 0.0);
-			grid->hu[i] = 0.0;
-		}
+		dh[i] = seen_by_left[i].h - seen_by_right[i - 1].h;
+		dhu[i] = seen_by_left[i].hu - seen_by_right[i - 1].hu;
 	}
 }

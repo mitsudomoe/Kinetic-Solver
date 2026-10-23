@@ -37,13 +37,15 @@ typedef struct
 /* Creates the directory if needed; returns 0 on success. */
 int output_prepare_dir(const char *dir);
 
-/* Writes <dir>/snapshot_<index>.dat with columns x z h hu [h_exact hu_exact]
- * and appends t to <dir>/times.dat. Returns 0 on success. */
-int output_snapshot(const char *dir, int index, double t, const Grid *grid, const TestCase *tc);
+/* Writes <dir>/snapshot_<index>.dat with columns x z h hu, plus h_exact and
+ * hu_exact when with_exact is set, and appends t to <dir>/times.dat.
+ * Returns 0 on success. */
+int output_snapshot(const char *dir, int index, double t, const Grid *grid, const TestCase *tc, int with_exact);
 
 /* Errors of h and hu against the exact solution at time t, over the
- * interior cells. Returns 0 when the case has no exact solution. */
-int output_errors(const Grid *grid, const TestCase *tc, double t, ErrorNorms *h_err, ErrorNorms *hu_err);
+ * interior cells. Returns 0 (and zero norms) when with_exact is not set or
+ * the case has no exact solution. */
+int output_errors(const Grid *grid, const TestCase *tc, double t, int with_exact, ErrorNorms *h_err, ErrorNorms *hu_err);
 
 /* Smallest water height over the interior cells. */
 double output_min_height(const Grid *grid);
