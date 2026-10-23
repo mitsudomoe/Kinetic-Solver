@@ -1,0 +1,60 @@
+site_name: Kinetic-Solver
+site_description: A well-balanced kinetic scheme for the Saint-Venant system with topography
+site_author: Mathieu Besson
+repo_url: https://github.com/mitsudomoe/Kinetic-Solver
+repo_name: mitsudomoe/Kinetic-Solver
+edit_uri: edit/master/docs/
+copyright: Copyright &copy; 2013, 2026 Mathieu Besson — GPL v3
+
+nav:
+  - Home: index.md
+  - Getting started: getting-started.md
+  - Theory: theory.md
+  - Implementation: implementation.md
+  - Validation: validation.md
+  - Contributing: contributing.md
+  - References: references.md
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+    - toc.follow
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+markdown_extensions:
+  - attr_list
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+
+validation:
+  links:
+    anchors: warn
