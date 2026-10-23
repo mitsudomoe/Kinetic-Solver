@@ -688,6 +688,10 @@
 <td>lake at rest on three topographies; errors against Ritter and Stoker; convergence; positivity; mass conservation; command line</td>
 </tr>
 <tr>
+<td><code>tests/test_cases.py</code></td>
+<td>the exact solutions themselves (Bernoulli head, critical crest, jump position, periodicity of Thacker's solution); Thacker's bowl; the three steady flows over the bump; run-up and backwash on the beach</td>
+</tr>
+<tr>
 <td><code>tests/test_integrators.py</code></td>
 <td>order in time of each integrator; SSP properties; Euler versus Runge-Kutta; mirror and translation symmetries; options</td>
 </tr>
@@ -723,7 +727,11 @@ tests: the lake-at-rest, conservation and symmetry tests then cover it.</p>
 <p>A case is an entry in the table of <code>src/cases.c</code>: domain, final time, default number
 of cells, boundary condition, the <strong>primitive</strong> of the bottom (cell averages are
 computed from it), the initial condition and, if one is known, the exact solution.
-Keep the domain symmetric about <span class="arithmatex">\(x = 0\)</span> so that the mirror test applies.</p>
+The primitive receives the case, so the topography can depend on its parameters.
+If the domain is symmetric about <span class="arithmatex">\(x = 0\)</span>, the case can also take part in the mirror
+test. An exact solution is worth checking on its own before comparing a scheme with it:
+<code>tests/test_cases.py</code> does so for the solutions added in 2026, and caught a wrong jump
+position that way.</p>
 <h2 id="adding-a-time-integrator">Adding a time integrator<a class="headerlink" href="#adding-a-time-integrator" title="Permanent link">&para;</a></h2>
 <p>An integrator is a list of Shu-Osher stages <span class="arithmatex">\((a_k, b_k)\)</span> in <code>src/integrator.c</code>. Keep
 <span class="arithmatex">\(a_k, b_k \ge 0\)</span> and <span class="arithmatex">\(a_k + b_k = 1\)</span> so that it stays strong-stability-preserving,

@@ -1010,8 +1010,18 @@ the wave speed <span class="arithmatex">\(\lvert u\rvert + \sqrt{gh}\)</span> wi
 <td>copy of the opposite end</td>
 <td><code>periodic-pulse</code></td>
 </tr>
+<tr>
+<td>inflow / outflow</td>
+<td>left: imposed discharge <span class="arithmatex">\(q\)</span>, height copied; right: imposed height <span class="arithmatex">\(h_{\text{out}}\)</span> while the outflow is subcritical, copy once it is supercritical</td>
+<td>flows over the bump</td>
+</tr>
 </tbody>
 </table>
+<p>The outflow condition follows the characteristics: at a subcritical outlet one wave
+enters the domain and the downstream height must be imposed; at a supercritical
+outlet none does and imposing it would be wrong. With a plain copy instead, any
+subcritical steady state is compatible with the boundary and the transcritical flow
+never develops: water piles up downstream.</p>
 <p>The bottom of the ghost cells follows the same rule, so that a lake at rest stays at
 rest across the boundary.</p>
 <h2 id="history">History<a class="headerlink" href="#history" title="Permanent link">&para;</a></h2>

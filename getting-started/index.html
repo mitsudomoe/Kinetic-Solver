@@ -803,9 +803,49 @@ whose solution stops being finite stops with an error.</p>
 <td>walls</td>
 <td>—</td>
 </tr>
+<tr>
+<td><code>thacker</code></td>
+<td>parabolic bowl</td>
+<td>tilted plane surface at rest, both shorelines move</td>
+<td>walls</td>
+<td>Thacker</td>
+</tr>
+<tr>
+<td><code>bump-subcritical</code></td>
+<td>bump</td>
+<td>lake at rest, then inflow <span class="arithmatex">\(q = 4.42\)</span></td>
+<td>inflow / outflow</td>
+<td>steady, Bernoulli</td>
+</tr>
+<tr>
+<td><code>bump-transcritical</code></td>
+<td>bump</td>
+<td>lake at rest, then inflow <span class="arithmatex">\(q = 1.53\)</span></td>
+<td>inflow / outflow</td>
+<td>steady, Bernoulli</td>
+</tr>
+<tr>
+<td><code>bump-hydraulic-jump</code></td>
+<td>bump</td>
+<td>lake at rest, then inflow <span class="arithmatex">\(q = 0.18\)</span></td>
+<td>inflow / outflow</td>
+<td>steady, with a jump</td>
+</tr>
+<tr>
+<td><code>beach-runup</code></td>
+<td>flat, then a 10% beach</td>
+<td>wave travelling towards the dry beach</td>
+<td>walls</td>
+<td>—</td>
+</tr>
 </tbody>
 </table>
-<p>All domains are <span class="arithmatex">\([-10, 10]\)</span> m; the bump is <span class="arithmatex">\(Z(x) = 0.2 - 0.05\,x^2\)</span> on <span class="arithmatex">\([-2, 2]\)</span>.</p>
+<p>The domains are <span class="arithmatex">\([-10, 10]\)</span> m, except <span class="arithmatex">\([-10, 15]\)</span> m for the flows over the bump and the
+beach. The bump is <span class="arithmatex">\(Z(x) = 0.2 - 0.05\,x^2\)</span> on <span class="arithmatex">\([-2, 2]\)</span>; the bowl is
+<span class="arithmatex">\(Z(x) = 0.5\,(x^2/64 - 1)\)</span>; the beach is <span class="arithmatex">\(Z(x) = 0.1\,x\)</span> for <span class="arithmatex">\(x \ge 0\)</span>.</p>
+<p>The flows over the bump take 100 to 200 s of simulated time to settle into their
+steady state; <code>thacker</code> runs for one period of the oscillation (16.05 s). Runs longer
+than the default only need <code>--t-end</code>.</p>
 <h2 id="output-files">Output files<a class="headerlink" href="#output-files" title="Permanent link">&para;</a></h2>
 <p>Each run writes to <code>--output-dir</code>:</p>
 <ul>
