@@ -1,53 +1,48 @@
-clear all
-close all
+% Animates the snapshots written by kinetic-solver (MATLAB or GNU Octave).
+%
+% Usage, from the repository root:
+%     graph            % reads the default "output" directory
+%     graph('runs/dam-break')
+%
+% Each snapshot_NNNNN.dat file has the columns x z h hu [h_exact hu_exact];
+% times.dat lists "index t" for every snapshot.
 
-bInf = -10.0;
-bSup = 10.0;
+function graph(directory)
+	if nargin < 1
+		directory = 'output';
+	end
 
-file_height = sprintf('%d_height.txt',1);
-file_discharge = sprintf('%d_discharge.txt',1);
-time = 'time.txt';
-topo = 'topo.txt';
+	times = load(fullfile(directory, 'times.dat'));
+	for k = 1:size(times, 1)
+		file = fullfile(directory, sprintf('snapshot_%05d.dat', times(k, 1)));
+		data = dlmread(file, ' ', 2, 0);   % skip the two '#' header lines
+		x = data(:, 1);
+		z = data(:, 2);
+		h = data(:, 3);
+		hu = data(:, 4);
 
-h = load(file_height);
-hu = load(file_discharge);
-T = load(time);
-Z = load(topo);
+		subplot(2, 1, 1);
+		area_bottom = min(z) - 0.05;
+		plot(x, h + z, 'b', x, z, 'k');
+		hold on
+		if size(data, 2) >= 6
+			plot(x, data(:, 5) + z, 'r--');
+		end
+		hold off
+		ylim([area_bottom, max(h + z) + 0.1]);
+		title(sprintf('t = %.3f s', times(k, 2)));
+		ylabel('elevation (m)');
 
-% We must print H = h + Z
-h = h + Z;
-nbCell = length(h);
-dx = (bSup-bInf)/(nbCell+1);
-
-X = ones(nbCell,1);
-
-X(1) = bInf;
-for i=2:nbCell-1
-	X(i) = (bInf + dx/2.0) + (i-1)*dx;
-end
-X(nbCell) = bSup;
-
-for i=1:length(T)
-    titreGraph = sprintf('T = %f',T(i));
-    
-    subplot(2,1,1); 
-    plot(X,h)
-    hold on
-    plot(X,Z)
-    hold off
-    axis([X(1) X(nbCell) -0.001 1.0])
-    title(titreGraph);
-    hleg1 = legend('Height');
-    
-    subplot(2,1,2);
-    plot(X,hu)
-    axis([X(1) X(nbCell) -0.5 0.5])
-    hleg2 = legend('Discharge');
-    pause(0.2)
-    
-	file_height = sprintf('%d_height.txt',i);
-    file_discharge = sprintf('%d_discharge.txt',i);
-    h = load(file_height);
-    hu = load(file_discharge);
-    h = h + Z;
+		subplot(2, 1, 2);
+		plot(x, hu, 'b');
+		if size(data, 2) >= 6
+			hold on
+			plot(x, data(:, 6), 'r--');
+			hold off
+		end
+		ylabel('hu (m^2/s)');
+		xlabel('x (m)');
+		drawnow;
+		pause(0.05);
+	end
 end
