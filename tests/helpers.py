@@ -34,6 +34,18 @@ def run_final_state(case, scheme, *extra):
         return summary, np.loadtxt(final, comments="#", ndmin=2)
 
 
+def run_snapshots(case, scheme, *extra):
+    """Runs one case and returns every snapshot, in time order, as arrays of rows x z h hu ..."""
+    import glob
+    import numpy as np
+
+    with tempfile.TemporaryDirectory() as out:
+        subprocess.run([SOLVER, "--case", case, "--scheme", scheme, "--output-dir", out, *extra],
+                       check=True, capture_output=True, text=True)
+        return [np.loadtxt(path, comments="#", ndmin=2)
+                for path in sorted(glob.glob(os.path.join(out, "snapshot_*.dat")))]
+
+
 class FluxHarness:
     """Keeps one harness process open and evaluates interface fluxes through it."""
 
