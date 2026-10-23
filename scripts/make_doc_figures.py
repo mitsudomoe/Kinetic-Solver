@@ -158,6 +158,115 @@ def lake_at_rest_table():
             print(f"| {case} | {scheme} | {s['h_linf']:.1e} | {s['hu_linf']:.1e} |")
 
 
+def wet_surface(h, z, threshold=1e-3):
+    """Free surface h + z, with NaN on dry cells so that plots do not draw it there."""
+    return np.where(h > threshold, h + z, np.nan)
+
+
+def run_all_snapshots(case, scheme, *extra):
+    """Runs the solver; returns (times, list of snapshots)."""
+    with tempfile.TemporaryDirectory() as out:
+        subprocess.run([SOLVER, "--case", case, "--scheme", scheme, "--output-dir", out, *extra],
+                       check=True, capture_output=True)
+        times = np.loadtxt(os.path.join(out, "times.dat"), ndmin=2)[:, 1]
+        snapshots = [np.loadtxt(p, ndmin=2) for p in sorted(glob.glob(os.path.join(out, "snapshot_*.dat")))]
+    return times, snapshots
+
+
+def thacker_figure():
+    period = 2.0 * math.pi * 8.0 / math.sqrt(2.0 * 9.81 * 0.5)
+    fractions = (0.0, 0.25, 0.5, 1.0)
+    fig, axes = plt.subplots(1, len(fractions), figsize=(13, 3.2), sharey=True)
+    for ax, fraction in zip(axes, fractions):
+        t_end = max(fraction * period, 1e-6)
+        for scheme in ("kinetic", "rusanov"):
+            _, data = run("thacker", scheme, "--cells", "200", "--t-end", repr(t_end))
+            ax.plot(data[:, 0], wet_surface(data[:, 2], data[:, 1]), color=COLORS[scheme], label=scheme)
+        wet = data[:, 4] > 0
+        ax.plot(data[wet, 0], data[wet, 4] + data[wet, 1], "--", color="black", linewidth=1, label="exact")
+        ax.fill_between(data[:, 0], data[:, 1].min() - 0.05, data[:, 1], color="0.8")
+        ax.set_title(f"t = {fraction:g} T" if fraction else "t = 0")
+        ax.set_xlabel("x (m)")
+        ax.grid(alpha=0.3)
+    axes[0].set_ylabel("elevation (m)")
+    axes[-1].legend(fontsize="small")
+    save(fig, "thacker.png")
+
+    print("\nThacker, L1 error of h after one period:")
+    print("| Scheme | 100 | 200 | 400 | 800 | 1600 |")
+    for scheme in ("kinetic", "rusanov"):
+        errors = [run("thacker", scheme, "--cells", str(n), "--no-snapshots")[0]["h_l1"] for n in (100, 200, 400, 800, 1600)]
+        print(f"| {scheme} | " + " | ".join(f"{e:.2e}" for e in errors) + " |")
+
+    print("\nThacker, 400 cells: tilt of the free surface (fit over |x| < 5) and mean velocity")
+    g, h0, a, b = 9.81, 0.5, 8.0, 0.6
+    omega = math.sqrt(2 * g * h0) / a
+    for fraction in (0.5, 1.0):
+        t = fraction * period
+        line = f"t = {fraction:g} T: exact tilt {-(b * omega / g) * math.cos(omega * t):+.5f}, u {b * math.sin(omega * t):+.4f}"
+        for scheme in ("kinetic", "rusanov"):
+            _, data = run("thacker", scheme, "--cells", "400", "--t-end", repr(t))
+            x, z, h, hu = data[:, 0], data[:, 1], data[:, 2], data[:, 3]
+            core = (h > 1e-3) & (np.abs(x) < 5)
+            tilt = np.polyfit(x[core], (h + z)[core], 1)[0]
+            line += f" | {scheme}: tilt {tilt:+.5f}, u {hu[core].sum() / h[core].sum():+.4f}"
+        print(line)
+
+
+def steady_flows_figure():
+    cases = (("bump-subcritical", "subcritical"), ("bump-transcritical", "transcritical"),
+             ("bump-hydraulic-jump", "transcritical with a hydraulic jump"))
+    fig, axes = plt.subplots(2, 3, figsize=(13, 5.5), sharex=True)
+    print("\nSteady flows over the bump, 400 cells, L1 error of h and max relative deviation of the discharge:")
+    print("| Case | Scheme | L1 error of h | max abs(hu - q) / q |")
+    for column, (case, title) in enumerate(cases):
+        for scheme in ("kinetic", "rusanov"):
+            summary, data = run(case, scheme, "--cells", "400")
+            q = data[0, 5]
+            axes[0, column].plot(data[:, 0], data[:, 2] + data[:, 1], color=COLORS[scheme], label=scheme)
+            axes[1, column].plot(data[:, 0], data[:, 3], color=COLORS[scheme], label=scheme)
+            print(f"| {case} | {scheme} | {summary['h_l1']:.2e} | {np.abs(data[:, 3] - q).max() / q:.1e} |")
+        axes[0, column].plot(data[:, 0], data[:, 4] + data[:, 1], "--", color="black", linewidth=1, label="exact")
+        axes[0, column].fill_between(data[:, 0], -0.02, data[:, 1], color="0.8")
+        axes[1, column].plot(data[:, 0], data[:, 5], "--", color="black", linewidth=1, label="exact")
+        axes[0, column].set_title(title)
+        axes[1, column].set_xlabel("x (m)")
+        for ax in axes[:, column]:
+            ax.grid(alpha=0.3)
+    axes[0, 0].set_ylabel("h + z (m)")
+    axes[1, 0].set_ylabel("hu (m²/s)")
+    axes[0, 0].legend(fontsize="small")
+    save(fig, "steady-flows.png")
+
+
+def runup_figure():
+    times, snapshots = run_all_snapshots("beach-runup", "kinetic", "--snapshot-every", "10")
+    moments = (0.0, 2.0, 3.5, 5.0, 6.5, 9.0)
+    fig, axes = plt.subplots(2, 3, figsize=(13, 5.5), sharex=True, sharey=True)
+    for ax, moment in zip(axes.flat, moments):
+        data = snapshots[int(np.argmin(np.abs(times - moment)))]
+        ax.fill_between(data[:, 0], -0.05, data[:, 1], color="0.8")
+        ax.plot(data[:, 0], wet_surface(data[:, 2], data[:, 1]), color=COLORS["kinetic"])
+        ax.axhline(0.5, color="0.5", linestyle=":", linewidth=1)
+        ax.set_title(f"t = {moment:g} s")
+        ax.set_ylim(-0.05, 1.2)
+        ax.grid(alpha=0.3)
+    for ax in axes[1]:
+        ax.set_xlabel("x (m)")
+    for ax in axes[:, 0]:
+        ax.set_ylabel("elevation (m)")
+    save(fig, "beach-runup.png")
+
+    print("\nBeach run-up (shoreline = last cell with h > 1e-3): maximum run-up above still water, lowest shoreline after it")
+    print("| Cells | Scheme | max run-up (m) | backwash shoreline x (m) |")
+    for cells in (250, 500, 1000, 2000):
+        for scheme in ("kinetic", "rusanov"):
+            _, snaps = run_all_snapshots("beach-runup", scheme, "--cells", str(cells), "--snapshot-every", str(max(1, cells // 100)))
+            shore = [d[np.nonzero(d[:, 2] > 1e-3)[0][-1], 0] for d in snaps]
+            peak = int(np.argmax(shore))
+            print(f"| {cells} | {scheme} | {0.1 * shore[peak] - 0.5:.3f} | {min(shore[peak:]):.2f} |")
+
+
 def main():
     if not os.path.exists(SOLVER):
         raise SystemExit("build the solver first: make")
@@ -170,6 +279,9 @@ def main():
     space_convergence()
     time_convergence()
     euler_versus_rk()
+    thacker_figure()
+    steady_flows_figure()
+    runup_figure()
 
 
 if __name__ == "__main__":

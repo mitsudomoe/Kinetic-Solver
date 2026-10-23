@@ -176,6 +176,13 @@ the wave speed $\lvert u\rvert + \sqrt{gh}$ with a default CFL number of 0.9.
 | free (transmissive) | copy of the neighbouring cell | lakes at rest, dam breaks |
 | wall | copy, with $hu$ reversed | `sloshing` |
 | periodic | copy of the opposite end | `periodic-pulse` |
+| inflow / outflow | left: imposed discharge $q$, height copied; right: imposed height $h_{\text{out}}$ while the outflow is subcritical, copy once it is supercritical | flows over the bump |
+
+The outflow condition follows the characteristics: at a subcritical outlet one wave
+enters the domain and the downstream height must be imposed; at a supercritical
+outlet none does and imposing it would be wrong. With a plain copy instead, any
+subcritical steady state is compatible with the boundary and the transcritical flow
+never develops: water piles up downstream.
 
 The bottom of the ghost cells follows the same rule, so that a lake at rest stays at
 rest across the boundary.

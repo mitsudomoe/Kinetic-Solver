@@ -10,6 +10,7 @@ make test     # needs python3 with numpy and scipy
 |---|---|
 | `tests/test_fluxes.py` | kinetic fluxes against the definitions of the paper; mass flux single-valued; momentum interface law of Ersoy (2026); hydrostatic balance; Rusanov on flat bottoms and dry states; Stoker's middle state |
 | `tests/test_solver.py` | lake at rest on three topographies; errors against Ritter and Stoker; convergence; positivity; mass conservation; command line |
+| `tests/test_cases.py` | the exact solutions themselves (Bernoulli head, critical crest, jump position, periodicity of Thacker's solution); Thacker's bowl; the three steady flows over the bump; run-up and backwash on the beach |
 | `tests/test_integrators.py` | order in time of each integrator; SSP properties; Euler versus Runge-Kutta; mirror and translation symmetries; options |
 
 `tests/flux_harness.c` exposes single interface fluxes to the Python tests: it
@@ -55,7 +56,11 @@ tests: the lake-at-rest, conservation and symmetry tests then cover it.
 A case is an entry in the table of `src/cases.c`: domain, final time, default number
 of cells, boundary condition, the **primitive** of the bottom (cell averages are
 computed from it), the initial condition and, if one is known, the exact solution.
-Keep the domain symmetric about $x = 0$ so that the mirror test applies.
+The primitive receives the case, so the topography can depend on its parameters.
+If the domain is symmetric about $x = 0$, the case can also take part in the mirror
+test. An exact solution is worth checking on its own before comparing a scheme with it:
+`tests/test_cases.py` does so for the solutions added in 2026, and caught a wrong jump
+position that way.
 
 ## Adding a time integrator
 

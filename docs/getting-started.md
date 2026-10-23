@@ -50,8 +50,19 @@ whose solution stops being finite stops with an error.
 | `dam-break-bump` | bump | $h = 2 \mid 1$ | free | — |
 | `periodic-pulse` | flat | moving Gaussian pulse | periodic | — |
 | `sloshing` | bump | $h = 2 \mid 1$ | walls | — |
+| `thacker` | parabolic bowl | tilted plane surface at rest, both shorelines move | walls | Thacker |
+| `bump-subcritical` | bump | lake at rest, then inflow $q = 4.42$ | inflow / outflow | steady, Bernoulli |
+| `bump-transcritical` | bump | lake at rest, then inflow $q = 1.53$ | inflow / outflow | steady, Bernoulli |
+| `bump-hydraulic-jump` | bump | lake at rest, then inflow $q = 0.18$ | inflow / outflow | steady, with a jump |
+| `beach-runup` | flat, then a 10% beach | wave travelling towards the dry beach | walls | — |
 
-All domains are $[-10, 10]$ m; the bump is $Z(x) = 0.2 - 0.05\,x^2$ on $[-2, 2]$.
+The domains are $[-10, 10]$ m, except $[-10, 15]$ m for the flows over the bump and the
+beach. The bump is $Z(x) = 0.2 - 0.05\,x^2$ on $[-2, 2]$; the bowl is
+$Z(x) = 0.5\,(x^2/64 - 1)$; the beach is $Z(x) = 0.1\,x$ for $x \ge 0$.
+
+The flows over the bump take 100 to 200 s of simulated time to settle into their
+steady state; `thacker` runs for one period of the oscillation (16.05 s). Runs longer
+than the default only need `--t-end`.
 
 ## Output files
 
