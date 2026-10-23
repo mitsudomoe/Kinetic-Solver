@@ -38,7 +38,7 @@ int output_prepare_dir(const char *dir)
 	return 0;
 }
 
-int output_snapshot(const char *dir, int index, double t, const Grid *grid, const TestCase *tc)
+int output_snapshot(const char *dir, int index, double t, const Grid *grid, const TestCase *tc, int with_exact)
 {
 	char path[1024];
 	FILE *file;
@@ -52,11 +52,11 @@ int output_snapshot(const char *dir, int index, double t, const Grid *grid, cons
 		return -1;
 	}
 	fprintf(file, "# case=%s t=%.17g\n", tc->name, t);
-	fprintf(file, "# x z h hu%s\n", tc->exact ? " h_exact hu_exact" : "");
+	fprintf(file, "# x z h hu%s\n", with_exact ? " h_exact hu_exact" : "");
 	for (i = 1; i <= grid->n; i++)
 	{
 		fprintf(file, "%.17g %.17g %.17g %.17g", grid->x[i], grid->z[i], grid->h[i], grid->hu[i]);
-		if (tc->exact)
+		if (with_exact)
 		{
 			double h, hu;
 
@@ -89,13 +89,13 @@ int output_snapshot(const char *dir, int index, double t, const Grid *grid, cons
 	return fclose(file) == 0 ? 0 : -1;
 }
 
-int output_errors(const Grid *grid, const TestCase *tc, double t, ErrorNorms *h_err, ErrorNorms *hu_err)
+int output_errors(const Grid *grid, const TestCase *tc, double t, int with_exact, ErrorNorms *h_err, ErrorNorms *hu_err)
 {
 	int i;
 
 	h_err->l1 = h_err->linf = 0.0;
 	hu_err->l1 = hu_err->linf = 0.0;
-	if (!tc->exact)
+	if (!with_exact || !tc->exact)
 	{
 		return 0;
 	}

@@ -236,7 +236,12 @@ void case_initialize(const TestCase *tc, Grid *grid)
 		grid->z[i] = (tc->topography(right) - tc->topography(left)) / grid->dx;
 		tc->initial(tc, grid->x[i], grid->z[i], &grid->h[i], &grid->hu[i]);
 	}
+	case_fill_ghost_bottom(tc, grid);
+	case_apply_boundary(tc, grid);
+}
 
+void case_fill_ghost_bottom(const TestCase *tc, Grid *grid)
+{
 	/* The bottom of the ghost cells follows the boundary condition, so that
 	 * a lake at rest stays at rest across the boundary. */
 	if (tc->boundary == BC_PERIODIC)
@@ -249,7 +254,6 @@ void case_initialize(const TestCase *tc, Grid *grid)
 		grid->z[0] = grid->z[1];
 		grid->z[grid->n + 1] = grid->z[grid->n];
 	}
-	case_apply_boundary(tc, grid);
 }
 
 void case_apply_boundary(const TestCase *tc, Grid *grid)

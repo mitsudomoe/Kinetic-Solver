@@ -66,6 +66,10 @@ void case_list(void);
 /* Sets z (including ghost cells), h and hu at t = 0. */
 void case_initialize(const TestCase *tc, Grid *grid);
 
+/* Sets the bottom of the ghost cells from the interior, following the
+ * boundary condition (called by case_initialize). */
+void case_fill_ghost_bottom(const TestCase *tc, Grid *grid);
+
 /* Fills the ghost cells of h and hu. */
 void case_apply_boundary(const TestCase *tc, Grid *grid);
 
