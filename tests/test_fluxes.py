@@ -167,6 +167,81 @@ class RusanovFluxTest(unittest.TestCase):
             self.assertAlmostEqual(got, expected, places=13)
 
 
+def jump_height(left, right):
+    """Effective interface height h^jump of Ersoy (2026), Proposition 4.1.
+
+    M. Ersoy, "Perthame-Simeoni kinetic traces and nonconservative interface
+    laws for DG approximations of the Saint-Venant system", hal-05618693.
+    With dZ = z_right - z_left and alpha = sqrt(2 g |dZ|), the one-sided
+    momentum fluxes satisfy F2^- - F2^+ = g dZ h^jump, where h^jump >= 0 is
+    the sum of the reflected and transmitted particle contributions below.
+    """
+    (h_l, hu_l, z_l), (h_r, hu_r, z_r) = left, right
+    u_l = hu_l / h_l if h_l > 0 else 0.0
+    u_r = hu_r / h_r if h_r > 0 else 0.0
+    dz = z_r - z_l
+    alpha = math.sqrt(2.0 * G * abs(dz))
+
+    def m_left(xi):
+        return equilibrium(h_l, u_l, xi)
+
+    def m_right_reversed(xi):
+        return equilibrium(h_r, u_r, -xi)
+
+    # Support edges of both Maxwellians, mirrored, plus alpha.
+    breaks = [alpha]
+    for h, u in ((h_l, u_l), (h_r, u_r)):
+        c = math.sqrt(2.0 * G * h)
+        breaks += [u - c, u + c, -(u - c), -(u + c)]
+
+    def reflected(m):
+        return 2.0 / (G * abs(dz)) * integrate(lambda x: x * x * m(x), 0.0, alpha, breaks)
+
+    def transmitted_up(m):    # climbs the step: xi > alpha
+        return 2.0 * integrate(lambda x: x / (x + math.sqrt(x * x - alpha * alpha)) * m(x),
+                               alpha, 60.0, breaks)
+
+    def transmitted_down(m):  # falls down the step
+        return 2.0 * integrate(lambda x: x / (math.sqrt(x * x + alpha * alpha) + x) * m(x),
+                               0.0, 60.0, breaks)
+
+    if dz > 0:
+        return reflected(m_left) + transmitted_up(m_left) + transmitted_down(m_right_reversed)
+    return transmitted_down(m_left) + reflected(m_right_reversed) + transmitted_up(m_right_reversed)
+
+
+class MomentumJumpTest(unittest.TestCase):
+    """Ersoy (2026), Proposition 4.1: F2^- - F2^+ = g dZ h^jump with h^jump >= 0."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.harness = FluxHarness()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.harness.close()
+
+    def test_momentum_defect_matches_jump_height(self):
+        cases = [s for s in random_states(seed=2027, count=60) if s[0][2] != s[1][2]]
+        self.assertGreater(len(cases), 30)
+        for left, right in cases:
+            _, f_minus_q, _, f_plus_q = self.harness.flux("kinetic", left, right)
+            dz = right[2] - left[2]
+            h_jump = jump_height(left, right)
+            with self.subTest(left=left, right=right):
+                self.assertGreaterEqual(h_jump, 0.0)
+                self.assertAlmostEqual(f_minus_q - f_plus_q, G * dz * h_jump,
+                                       delta=1e-10 * (1.0 + abs(f_minus_q) + abs(f_plus_q)))
+
+    def test_lake_at_rest_selects_mean_height(self):
+        # At rest (u = 0, h + z constant) the defect is the hydrostatic pressure
+        # jump g/2 (h_l^2 - h_r^2) = g dZ (h_l + h_r)/2: h^jump is the mean height.
+        for h_left, z_left, z_right in ((1.0, 0.0, 0.3), (0.7, 0.3, 0.0), (2.0, 0.1, 0.25)):
+            h_right = h_left + z_left - z_right
+            h_jump = jump_height((h_left, 0.0, z_left), (h_right, 0.0, z_right))
+            self.assertAlmostEqual(h_jump, 0.5 * (h_left + h_right), places=10)
+
+
 class StokerTest(unittest.TestCase):
 
     def test_middle_state_solves_jump_conditions(self):

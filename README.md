@@ -52,6 +52,11 @@ make test            # needs python3 with numpy and scipy
   integrates the interface densities (3.7)-(3.8) of the paper directly in ξ,
   without any of the closed-form integrals of Section 4. It also checks the
   conservation property of Remark 3.1 and the hydrostatic balance of both schemes.
+  It also checks the momentum interface law of M. Ersoy, *Perthame–Simeoni kinetic
+  traces and nonconservative interface laws for DG approximations of the
+  Saint–Venant system* (2026, [hal-05618693](https://hal.science/hal-05618693)),
+  Proposition 4.1: the two one-sided momentum fluxes differ by exactly
+  `g ΔZ h^jump`, with `h^jump ≥ 0` given by the reflected and transmitted particles.
 - `tests/test_solver.py` runs the solver: lake at rest kept to 1e-12, errors
   against Ritter and Stoker, convergence, positivity and mass conservation.
 
