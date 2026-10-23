@@ -20,6 +20,20 @@ def run_solver(case, scheme, *extra):
             return json.load(handle)
 
 
+def run_final_state(case, scheme, *extra):
+    """Runs one case and returns (summary, final snapshot as an array of rows x z h hu ...)."""
+    import glob
+    import numpy as np
+
+    with tempfile.TemporaryDirectory() as out:
+        subprocess.run([SOLVER, "--case", case, "--scheme", scheme, "--output-dir", out, *extra],
+                       check=True, capture_output=True, text=True)
+        with open(os.path.join(out, "summary.json")) as handle:
+            summary = json.load(handle)
+        final = sorted(glob.glob(os.path.join(out, "snapshot_*.dat")))[-1]
+        return summary, np.loadtxt(final, comments="#", ndmin=2)
+
+
 class FluxHarness:
     """Keeps one harness process open and evaluates interface fluxes through it."""
 
