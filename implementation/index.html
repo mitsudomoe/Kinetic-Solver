@@ -1,0 +1,1094 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A well-balanced kinetic scheme for the Saint-Venant system with topography">
+      
+      
+        <meta name="author" content="Mathieu Besson">
+      
+      
+      
+        <link rel="prev" href="../theory/">
+      
+      
+        <link rel="next" href="../validation/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Implementation - Kinetic-Solver</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#implementation" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Kinetic-Solver" class="md-header__button md-logo" aria-label="Kinetic-Solver" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Kinetic-Solver
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Implementation
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/mitsudomoe/Kinetic-Solver" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    mitsudomoe/Kinetic-Solver
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Kinetic-Solver" class="md-nav__button md-logo" aria-label="Kinetic-Solver" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Kinetic-Solver
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/mitsudomoe/Kinetic-Solver" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    mitsudomoe/Kinetic-Solver
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../theory/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Theory
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Implementation
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Implementation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#code-organisation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Code organisation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#grid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Grid
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sign-convention-for-the-bottom-jump" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sign convention for the bottom jump
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#interface-fluxes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interface fluxes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-integral-ii3q" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The integral II3q
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-sign-in-the-paper" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A sign in the paper
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dry-cells" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dry cells
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#time-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Time integration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-rusanov-reference-scheme" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Rusanov reference scheme
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#boundary-conditions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Boundary conditions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#history" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        History
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../validation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Validation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../references/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    References
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#code-organisation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Code organisation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#grid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Grid
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sign-convention-for-the-bottom-jump" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sign convention for the bottom jump
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#interface-fluxes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interface fluxes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-integral-ii3q" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The integral II3q
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-sign-in-the-paper" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A sign in the paper
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dry-cells" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dry cells
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#time-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Time integration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-rusanov-reference-scheme" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Rusanov reference scheme
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#boundary-conditions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Boundary conditions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#history" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        History
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="implementation">Implementation<a class="headerlink" href="#implementation" title="Permanent link">&para;</a></h1>
+<h2 id="code-organisation">Code organisation<a class="headerlink" href="#code-organisation" title="Permanent link">&para;</a></h2>
+<pre class="mermaid"><code>flowchart LR
+    main["main.c&lt;br/&gt;options, output"] --&gt; sim["simulation.c&lt;br/&gt;owns grid and buffers"]
+    sim --&gt; int["integrator.c&lt;br/&gt;Euler, SSP-RK2, SSP-RK3"]
+    sim --&gt; cases["cases.c&lt;br/&gt;topography, initial data,&lt;br/&gt;boundaries, exact solutions"]
+    int --&gt; scheme["scheme.c&lt;br/&gt;flux balance L(U)"]
+    scheme --&gt; kin["kinetic.c&lt;br/&gt;Perthame-Simeoni"]
+    scheme --&gt; rus["rusanov.c&lt;br/&gt;hydrostatic reconstruction"]
+    kin --&gt; quad["quadrature.c&lt;br/&gt;tanh-sinh"]
+    main --&gt; out["output.c&lt;br/&gt;snapshots, errors"]</code></pre>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Responsibility</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>grid.c</code></td>
+<td>uniform grid, cell centres, state arrays <span class="arithmatex">\(h\)</span>, <span class="arithmatex">\(hu\)</span>, <span class="arithmatex">\(Z\)</span></td>
+</tr>
+<tr>
+<td><code>cases.c</code></td>
+<td>test cases: bottom, initial state, boundary conditions, exact solutions</td>
+</tr>
+<tr>
+<td><code>scheme.c</code></td>
+<td>the spatial operator: one pass over the interfaces, flux balance per cell</td>
+</tr>
+<tr>
+<td><code>kinetic.c</code></td>
+<td>interface fluxes of the kinetic scheme with reflections</td>
+</tr>
+<tr>
+<td><code>rusanov.c</code></td>
+<td>interface fluxes of the reference scheme</td>
+</tr>
+<tr>
+<td><code>quadrature.c</code></td>
+<td>tanh-sinh quadrature for <span class="arithmatex">\(II^q_3\)</span></td>
+</tr>
+<tr>
+<td><code>integrator.c</code></td>
+<td>explicit time integrators in Shu-Osher form</td>
+</tr>
+<tr>
+<td><code>simulation.c</code></td>
+<td>one run: creation, time stepping, destruction</td>
+</tr>
+<tr>
+<td><code>output.c</code></td>
+<td>snapshot files, error norms</td>
+</tr>
+<tr>
+<td><code>main.c</code></td>
+<td>command-line options, summary</td>
+</tr>
+</tbody>
+</table>
+<p>Schemes, integrators and cases are each a table of entries looked up by name, so
+adding one does not touch the rest of the code (see <a href="../contributing/">Contributing</a>).</p>
+<h2 id="grid">Grid<a class="headerlink" href="#grid" title="Permanent link">&para;</a></h2>
+<p>The domain <span class="arithmatex">\([x_{\min}, x_{\max}]\)</span> is divided into <span class="arithmatex">\(n\)</span> cells of width
+<span class="arithmatex">\(\Delta x = (x_{\max} - x_{\min})/n\)</span>. Interior cells are <span class="arithmatex">\(i = 1, \dots, n\)</span>, with
+centres <span class="arithmatex">\(x_i = x_{\min} + (i - \tfrac12)\Delta x\)</span>; cells <span class="arithmatex">\(0\)</span> and <span class="arithmatex">\(n + 1\)</span> are ghost
+cells filled by the boundary conditions.</p>
+<p>The bottom is stored as <strong>cell averages</strong>, <span class="arithmatex">\(Z_i = \frac{1}{\Delta x}\int_{C_i} Z(x)\,dx\)</span>,
+as in Section 3.1 of the paper. Each topography is defined by its primitive, so the
+averages are exact.</p>
+<h2 id="sign-convention-for-the-bottom-jump">Sign convention for the bottom jump<a class="headerlink" href="#sign-convention-for-the-bottom-jump" title="Permanent link">&para;</a></h2>
+<p>The jump is always the one <strong>seen from the cell that owns the flux</strong>:</p>
+<div class="arithmatex">\[
+\Delta Z_{i+1/2} = Z_{i+1} - Z_i, \qquad \Delta Z_{i-1/2} = Z_{i-1} - Z_i .
+\]</div>
+<p>A positive jump is a step up for particles leaving cell <span class="arithmatex">\(i\)</span>. This is the convention
+the proof of the lake-at-rest property uses (<span class="arithmatex">\(\Delta Z_{i-1/2} = h_i - h_{i-1}\)</span> at rest).</p>
+<h2 id="interface-fluxes">Interface fluxes<a class="headerlink" href="#interface-fluxes" title="Permanent link">&para;</a></h2>
+<p>Both schemes implement the same interface: given the states of the two cells on each
+side of an interface, return the flux <strong>seen by the left cell</strong> (<span class="arithmatex">\(F^-\)</span>) and the flux
+<strong>seen by the right cell</strong> (<span class="arithmatex">\(F^+\)</span>). <code>scheme_flux_balance</code> visits each of the <span class="arithmatex">\(n + 1\)</span>
+interfaces once and forms</p>
+<div class="arithmatex">\[
+D_i = F^-_{i+1/2} - F^+_{i-1/2}, \qquad \frac{dU_i}{dt} = -\frac{D_i}{\Delta x}.
+\]</div>
+<p>For the kinetic scheme, only <span class="arithmatex">\(F^-\)</span> is coded. <span class="arithmatex">\(F^+\)</span> is obtained by the <strong>mirror
+symmetry</strong> <span class="arithmatex">\(x \to -x\)</span>: the right cell becomes the "own" cell of a mirrored problem
+in which velocities change sign. The mass flux changes sign under the mirror and the
+momentum flux (a second moment in <span class="arithmatex">\(\xi\)</span>) does not:</p>
+<div class="arithmatex">\[
+F^{+}_{i+1/2}(U_i, U_{i+1}) = \begin{pmatrix} -1 &amp; 0 \\ 0 &amp; 1 \end{pmatrix}
+F^{-}\big(\tilde U_{i+1}, \tilde U_i\big), \qquad \tilde U = (h, -hu, Z).
+\]</div>
+<p>This halves the code and guarantees that left and right fluxes are computed
+consistently.</p>
+<h2 id="the-integral-ii3q">The integral II<sub>3</sub><sup>q</sup><a class="headerlink" href="#the-integral-ii3q" title="Permanent link">&para;</a></h2>
+<p><span class="arithmatex">\(II^q_3\)</span> has no elementary primitive. When the bottom steps down towards the own
+cell (<span class="arithmatex">\(K^+ &lt; 0\)</span>), the radicand <span class="arithmatex">\((\omega + Fr)^2 + K^+\)</span> vanishes exactly at the upper
+bound <span class="arithmatex">\(\beta = -\sqrt{(K^+)_-} - Fr\)</span>, and <span class="arithmatex">\(s(\omega) = \sqrt{1 - \omega^2}\)</span> vanishes at
+the lower bound <span class="arithmatex">\(-1\)</span>. The integrand therefore has <strong>square-root singularities at both
+ends</strong>.</p>
+<p>The paper suggests a repeated midpoint rule. Because of the singularities it
+converges only like <span class="arithmatex">\(N^{-3/2}\)</span>, and since the lake-at-rest property relies on exact
+integrals, the quadrature error shows up directly as spurious currents:</p>
+<table>
+<thead>
+<tr>
+<th>Quadrature of <span class="arithmatex">\(II^q_3\)</span></th>
+<th>max <span class="arithmatex">\(\lvert hu \rvert\)</span> after 1.5 s on the lake at rest</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>midpoint, <span class="arithmatex">\(N = 100\)</span></td>
+<td><span class="arithmatex">\(1.8 \times 10^{-3}\)</span></td>
+</tr>
+<tr>
+<td>midpoint, <span class="arithmatex">\(N = 1000\)</span></td>
+<td><span class="arithmatex">\(5.2 \times 10^{-5}\)</span></td>
+</tr>
+<tr>
+<td>midpoint, <span class="arithmatex">\(N = 10\,000\)</span></td>
+<td><span class="arithmatex">\(\approx 2 \times 10^{-6}\)</span></td>
+</tr>
+<tr>
+<td>tanh-sinh, 113 nodes</td>
+<td><span class="arithmatex">\(1.4 \times 10^{-14}\)</span></td>
+</tr>
+</tbody>
+</table>
+<p>The midpoint figures were measured on the 2013 code in double precision with π
+corrected (1000 cells); the last line is the current code.</p>
+<p>The code uses a <strong>tanh-sinh</strong> (double exponential) rule, which converges
+exponentially even with algebraic endpoint singularities. The integrand receives the
+distances to both endpoints, computed without cancellation, and the radicand is
+expanded around <span class="arithmatex">\(\beta\)</span> so that its exact zero is preserved. Against a 30-digit
+reference the relative error is below <span class="arithmatex">\(2 \times 10^{-15}\)</span>.</p>
+<h2 id="a-sign-in-the-paper">A sign in the paper<a class="headerlink" href="#a-sign-in-the-paper" title="Permanent link">&para;</a></h2>
+<p>The closed form of <span class="arithmatex">\(II^h_3\)</span> printed in the paper ends with
+<span class="arithmatex">\(-\tfrac12 Fr\,\beta\sqrt{1-\beta^2}\)</span>. Integrating <span class="arithmatex">\(\sqrt{1 - \omega^2}\)</span> over
+<span class="arithmatex">\([-1, \beta]\)</span> gives <span class="arithmatex">\(+\tfrac12 Fr\,\beta\sqrt{1-\beta^2}\)</span>, which is what the code uses
+and what matches the flux definition (3.5) numerically.</p>
+<h2 id="dry-cells">Dry cells<a class="headerlink" href="#dry-cells" title="Permanent link">&para;</a></h2>
+<p>Cells with <span class="arithmatex">\(h \le 10^{-10}\)</span> are treated as dry: zero velocity, zero Froude number,
+and no contribution to the fluxes. Both schemes keep <span class="arithmatex">\(h \ge 0\)</span> under their CFL
+condition; after each stage the code only removes round-off level negative values
+and the momentum of cells that just dried out.</p>
+<h2 id="time-integration">Time integration<a class="headerlink" href="#time-integration" title="Permanent link">&para;</a></h2>
+<p>The semi-discrete system <span class="arithmatex">\(dU/dt = L(U)\)</span> is advanced by explicit integrators written
+in Shu-Osher form,</p>
+<div class="arithmatex">\[
+U^{(0)} = U^n, \qquad
+U^{(k)} = a_k U^n + b_k\left(U^{(k-1)} + \Delta t\, L(U^{(k-1)})\right), \qquad
+U^{n+1} = U^{(s)},
+\]</div>
+<table>
+<thead>
+<tr>
+<th>Integrator</th>
+<th><span class="arithmatex">\((a_k, b_k)\)</span></th>
+<th>Order</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>euler</code></td>
+<td><span class="arithmatex">\((0, 1)\)</span></td>
+<td>1</td>
+</tr>
+<tr>
+<td><code>ssp-rk2</code></td>
+<td><span class="arithmatex">\((0, 1),\ (\tfrac12, \tfrac12)\)</span></td>
+<td>2</td>
+</tr>
+<tr>
+<td><code>ssp-rk3</code></td>
+<td><span class="arithmatex">\((0, 1),\ (\tfrac34, \tfrac14),\ (\tfrac13, \tfrac23)\)</span></td>
+<td>3</td>
+</tr>
+</tbody>
+</table>
+<p>With <span class="arithmatex">\(a_k, b_k \ge 0\)</span> and <span class="arithmatex">\(a_k + b_k = 1\)</span>, every stage is a convex combination of
+forward Euler steps (strong-stability-preserving methods with coefficient 1).
+Positivity, the lake at rest and conservation therefore carry over from Euler under
+the same CFL condition. The time step comes from the CFL condition (3.9) with a
+default CFL number of 0.95.</p>
+<p>Forward Euler is the scheme of the paper and remains the default: with a first-order
+space discretisation it is also the most accurate at large CFL numbers (see
+<a href="../validation/#forward-euler-versus-runge-kutta">Validation</a>).</p>
+<h2 id="the-rusanov-reference-scheme">The Rusanov reference scheme<a class="headerlink" href="#the-rusanov-reference-scheme" title="Permanent link">&para;</a></h2>
+<p>The reference scheme combines the Rusanov (local Lax-Friedrichs) flux with the
+hydrostatic reconstruction of Audusse et al. (2004). At each interface the heights
+are reconstructed above the highest of the two bottoms,</p>
+<div class="arithmatex">\[
+Z^* = \max(Z_i, Z_{i+1}), \qquad
+h_i^* = (h_i + Z_i - Z^*)_+, \qquad
+h_{i+1}^* = (h_{i+1} + Z_{i+1} - Z^*)_+,
+\]</div>
+<p>the Rusanov flux <span class="arithmatex">\(\mathcal{F}\)</span> is evaluated on the reconstructed states, and each
+side adds the pressure correction</p>
+<div class="arithmatex">\[
+F^-_{i+1/2} = \mathcal{F} + \begin{pmatrix} 0 \\ \tfrac{g}{2}\left(h_i^2 - h_i^{*2}\right) \end{pmatrix},
+\qquad
+F^+_{i+1/2} = \mathcal{F} + \begin{pmatrix} 0 \\ \tfrac{g}{2}\left(h_{i+1}^2 - h_{i+1}^{*2}\right) \end{pmatrix}.
+\]</div>
+<p>It is positive and preserves the lake at rest, dry areas included. Its time step uses
+the wave speed <span class="arithmatex">\(\lvert u\rvert + \sqrt{gh}\)</span> with a default CFL number of 0.9.</p>
+<h2 id="boundary-conditions">Boundary conditions<a class="headerlink" href="#boundary-conditions" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Kind</th>
+<th>Ghost cells</th>
+<th>Used by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>free (transmissive)</td>
+<td>copy of the neighbouring cell</td>
+<td>lakes at rest, dam breaks</td>
+</tr>
+<tr>
+<td>wall</td>
+<td>copy, with <span class="arithmatex">\(hu\)</span> reversed</td>
+<td><code>sloshing</code></td>
+</tr>
+<tr>
+<td>periodic</td>
+<td>copy of the opposite end</td>
+<td><code>periodic-pulse</code></td>
+</tr>
+</tbody>
+</table>
+<p>The bottom of the ghost cells follows the same rule, so that a lake at rest stays at
+rest across the boundary.</p>
+<h2 id="history">History<a class="headerlink" href="#history" title="Permanent link">&para;</a></h2>
+<p>The 2013 code had the same scheme but several bugs, found and fixed in 2026:
+a value of π truncated to 3.1415 (it broke the lake-at-rest property by mixing with
+<code>acos</code>), an error norm multiplied by <span class="arithmatex">\(\Delta x\)</span>, a Rusanov scheme without topography
+that produced NaN on dry beds, three different cell-position formulas, and periodic
+boundaries one step behind. The pull requests on GitHub give the details and the
+measurements.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2013, 2026 Mathieu Besson — GPL v3
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.top", "content.code.copy", "toc.follow"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../javascripts/mathjax.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>
